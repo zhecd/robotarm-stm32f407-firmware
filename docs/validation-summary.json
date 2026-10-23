@@ -23,7 +23,7 @@
   "source_and_vendor_files_byte_identical": 545,
   "hardware_access_this_round": false,
   "hardware_motion_this_round": false,
-  "github_workflow_executed": false,
+  "github_workflow_executed": true,
   "remote_created": false,
   "pushed": false,
   "published": false,
@@ -37,5 +37,7 @@
     "offline tests do not validate physical dynamics, precision, long-term stability or noise",
     "historical hardware regressions are separate from latest patch validation",
     "PS2 rare invalid-frame mechanism not claimed resolved"
-  ]
+  ],
+  "github_repository": "https://github.com/zhecd/robotarm-stm32f407-firmware",
+  "github_actions_results": "See repository Actions; offline baseline results above remain separately scoped"
 }

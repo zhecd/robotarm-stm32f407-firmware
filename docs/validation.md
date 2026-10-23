@@ -4,7 +4,7 @@
 
 功能源代码基线为190，正常固件曾在191部署并独立完整Flash逐HEX记录回读一致。本次只整理本地发布目录，不连接串口/ST-Link、不烧录、不复位、不运动。原工程、历史证据及冻结交付包留在本地，不上传个人现场资料。
 
-190电脑验证为Debug/Release各558项、7种ARM配置审计、额外3种ELF调用检查；测试替身只替换明确设备/时间/传输边界。此次发布树会独立重复Debug/Release与7种固件验证，并比较全部Core/RobotArm/测试C源文件及正式HEX/BIN；准确结果见 [摘要](validation-summary.json)。GitHub CI文件已准备，但未在线执行。
+190电脑验证为Debug/Release各558项、7种ARM配置审计、额外3种ELF调用检查；测试替身只替换明确设备/时间/传输边界。此次发布树会独立重复Debug/Release与7种固件验证，并比较全部Core/RobotArm/测试C源文件及正式HEX/BIN；准确结果见 [摘要](validation-summary.json)。GitHub CI随新仓库推送触发；在线结果见仓库Actions，本机历史验证与在线执行分别记录。
 
 ## 历史实机证据
 

@@ -77,7 +77,9 @@ if(M1_HOME_POWERSHELL)
     add_test(NAME trial_query_transport
         COMMAND "${M1_HOME_POWERSHELL}" -NoProfile -NonInteractive -File
         "${CMAKE_CURRENT_LIST_DIR}/trial_query_transport_tests.ps1")
-    set_tests_properties(trial_query_transport PROPERTIES LABELS "stage3;startup;host_contract" TIMEOUT 10)
+    # PowerShell Add-Type may cold-start slowly on a hosted CI runner.
+    # This is only the offline CTest process budget; protocol/robot deadlines stay unchanged.
+    set_tests_properties(trial_query_transport PROPERTIES LABELS "stage3;startup;host_contract" TIMEOUT 60)
     add_test(NAME startup_trial_host_contract COMMAND "${M1_HOME_POWERSHELL}" -NoProfile -NonInteractive -File
         "${CMAKE_SOURCE_DIR}/tools/startup_trial/execute_after_approval.ps1" -SelfTest)
     set_tests_properties(startup_trial_host_contract PROPERTIES LABELS "stage3;startup;host_contract" TIMEOUT 10)
