@@ -1,0 +1,41 @@
+{
+  "functional_baseline": 190,
+  "publication_preparation": 192,
+  "date": "2026-10-23",
+  "status": "local offline validation passed",
+  "native_tests": {
+    "Debug": 558,
+    "Release": 558
+  },
+  "arm_profiles_built_and_audited": [
+    "ProductionLocked",
+    "ProductionTrial",
+    "ProductionHoldLocked",
+    "ProductionHoldTrial",
+    "ProductionDebug",
+    "ProductionRelease",
+    "ProductionLockedRelease"
+  ],
+  "architecture_check_passed": true,
+  "production_ELF_matches_190": true,
+  "production_HEX_matches_190": true,
+  "production_BIN_matches_190": true,
+  "source_and_vendor_files_byte_identical": 545,
+  "hardware_access_this_round": false,
+  "hardware_motion_this_round": false,
+  "github_workflow_executed": false,
+  "remote_created": false,
+  "pushed": false,
+  "published": false,
+  "license": "Apache-2.0",
+  "production_ELF_sha256": "6bc73b63f9e087f112350a4839d687f93893480e1f821d8185cf99d0b29ea591",
+  "firmware": {
+    "ProductionRelease.hex": "13130a1c8c8075e1063b9fb6a3115252a93031e3edb09c7e9c40f152c0bf9811",
+    "ProductionRelease.bin": "660fe4f5d2ba2fa520636d12efb68fd15a3a3fd7e406d8da3bdf1aaf3c013464"
+  },
+  "limits": [
+    "offline tests do not validate physical dynamics, precision, long-term stability or noise",
+    "historical hardware regressions are separate from latest patch validation",
+    "PS2 rare invalid-frame mechanism not claimed resolved"
+  ]
+}

@@ -1,0 +1,49 @@
+# Native / ARM build output
+/build/
+/out/
+/dist/
+CMakeUserPresets.json
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+*.o
+*.obj
+*.a
+*.lib
+*.elf
+*.map
+*.d
+*.su
+*.gcda
+*.gcno
+# Firmware release HEX/BIN are intentionally versioned under firmware/ only.
+*.hex
+*.bin
+!/firmware/ProductionRelease.hex
+!/firmware/ProductionRelease.bin
+# Local Python/runtime files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.env
+.env.*
+# IDE/user state
+.idea/
+.claude/
+.codex/
+.settings/
+.mxproject
+*.user
+*.swp
+.DS_Store
+Thumbs.db
+# Local device sessions and archives, never execution permission
+*.claim
+*.log
+*.zip
+before_flash*
+after_flash*
+before_ram*
+authorization.json
