@@ -1,8 +1,17 @@
 {
   "functional_baseline": 190,
-  "publication_preparation": 192,
-  "date": "2026-10-23",
-  "status": "local offline validation passed",
+  "release": "190-home-20261114",
+  "date": "2026-11-14",
+  "home_backoff_degrees": [
+    100,
+    29,
+    4
+  ],
+  "home_backoff_microsteps": [
+    4000,
+    1160,
+    160
+  ],
   "native_tests": {
     "Debug": 558,
     "Release": 558
@@ -17,27 +26,21 @@
     "ProductionLockedRelease"
   ],
   "architecture_check_passed": true,
-  "production_ELF_matches_190": true,
-  "production_HEX_matches_190": true,
-  "production_BIN_matches_190": true,
-  "source_and_vendor_files_byte_identical": 545,
-  "hardware_access_this_round": false,
-  "hardware_motion_this_round": false,
-  "github_workflow_executed": true,
-  "remote_created": false,
-  "pushed": false,
-  "published": false,
-  "license": "Apache-2.0",
-  "production_ELF_sha256": "6bc73b63f9e087f112350a4839d687f93893480e1f821d8185cf99d0b29ea591",
+  "production_rebuild_matches_deployed_elf_and_hex": true,
+  "production_ELF_sha256": "90ca5ca81e6bc70bdbe32bff548f4f8f53bc24655bc448cf5908fc6550bc4f0e",
   "firmware": {
-    "ProductionRelease.hex": "13130a1c8c8075e1063b9fb6a3115252a93031e3edb09c7e9c40f152c0bf9811",
-    "ProductionRelease.bin": "660fe4f5d2ba2fa520636d12efb68fd15a3a3fd7e406d8da3bdf1aaf3c013464"
+    "ProductionRelease.hex": "64eca6fe3d6176822c691f9221154200cd9579918a898250e19cb003b7013ecd",
+    "ProductionRelease.bin": "7b67460896ccd23ccecaae4f2fa0687d1a493f1dba1a19619041608fbc816570"
   },
-  "limits": [
-    "offline tests do not validate physical dynamics, precision, long-term stability or noise",
-    "historical hardware regressions are separate from latest patch validation",
-    "PS2 rare invalid-frame mechanism not claimed resolved"
-  ],
-  "github_repository": "https://github.com/zhecd/robotarm-stm32f407-firmware",
-  "github_actions_results": "See repository Actions; offline baseline results above remain separately scoped"
+  "hardware_checks": {
+    "operator_confirmed_home": true,
+    "independent_angle_measurement": false,
+    "UART_queries_passed": 9,
+    "SW7_idle_roundtrip_passed": true,
+    "PS2_frames_valid": 8863,
+    "PS2_frames_invalid": 0,
+    "led1_pattern_confirmed": true,
+    "ps2_motion_tested_this_check": false
+  },
+  "license": "Apache-2.0"
 }

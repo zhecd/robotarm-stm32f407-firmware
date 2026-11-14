@@ -37,6 +37,9 @@ def audit(name,compiled=None,hold_ms=0,home_period_ms=2):
             if addr==0x08000000:vectors=data[off:off+400]
     assert vectors
     # 直接从最终ELF读取Service配置，避免协议只改文字、真实周期仍为20ms。
+    commands=json.loads((BUILD/'compile_commands.json').read_text())
+    parallel=any('-DROBOTARM_PARALLEL_HOMING=1' in x['command'] for x in commands)
+    backoff_steps=(4000,1160,160) if parallel and compiled is None else (4000,1240,400)
     config_address=symbols.get('s_config')
     if config_address is not None:
         config=None
@@ -45,11 +48,9 @@ def audit(name,compiled=None,hold_ms=0,home_period_ms=2):
             if typ==1 and addr<=config_address and config_address+32<=addr+n:
                 config=struct.unpack_from('<6IB3xI',data,off+config_address-addr)
                 confirm_flag=data[off+config_address-addr+32]
-        assert config==(home_period_ms,0,220000,4000,1240,400,4,home_period_ms),config
+        assert config==(home_period_ms,0,220000,*backoff_steps,4,home_period_ms),config
         # GPIO候选额外开启非当前轴稳定确认，紧随32字节旧配置之后。
         assert confirm_flag==1
-    commands=json.loads((BUILD/'compile_commands.json').read_text())
-    parallel=any('-DROBOTARM_PARALLEL_HOMING=1' in x['command'] for x in commands)
     for suffix in ['Core/Src/gpio.c','RobotArm/BSP/src/bsp_limit_irq.c','RobotArm/App/adapters/app_isr_adapter.c','RobotArm/Service/homing/svc_homing_sequence.c']:
         cmd=next(x['command'] for x in commands if x['file'].replace('\\','/').endswith(suffix))
         assert '-DROBOTARM_LIMIT_STATE_MODE=1' in cmd and '-DROBOTARM_SEQUENTIAL_HOMING=1' in cmd
@@ -102,7 +103,7 @@ def audit(name,compiled=None,hold_ms=0,home_period_ms=2):
             'segments':segments,'compiled_motion':compiled,'state_sampling_hooks_verified':True,
             'flashed':False,'ready_hold_ms':hold_ms,'automatic_startup':compiled is None,'actual_sampling_latency_measured':False,
             'parallel_contact_barrier':parallel,'PS2_diagnostics_query':b'M412 FRAMES:' in data,
-            'home_seek_period_ms':home_period_ms,'home_backoff_period_ms':home_period_ms}
+            'home_backoff_steps':backoff_steps,'home_seek_period_ms':home_period_ms,'home_backoff_period_ms':home_period_ms}
     (HERE/(name+'_audit.json')).write_text(json.dumps(record,indent=2),encoding='utf8')
     return record
 

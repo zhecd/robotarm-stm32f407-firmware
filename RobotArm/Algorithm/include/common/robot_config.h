@@ -379,11 +379,24 @@ extern "C" {
 #define HOMING_BACKOFF_M3_DEG   5.0f /* M3 回零退回关节角，deg。 */
 #endif
 
-/* 逐轴GPIO回零的M3退回量：40微步/关节度，10°对应400微步。
+/* 正式并行回零的M2退回量；旧逐轴及台架试验继续使用31°。 */
+#ifndef HOMING_SEQUENCE_BACKOFF_M2_DEG
+#if ROBOTARM_PARALLEL_HOMING && !ROBOTARM_STARTUP_TRIAL_MODE
+#define HOMING_SEQUENCE_BACKOFF_M2_DEG 29.0f /* 1160微步。 */
+#else
+#define HOMING_SEQUENCE_BACKOFF_M2_DEG HOMING_BACKOFF_M2_DEG
+#endif
+#endif
+
+/* GPIO回零的M3退回量：40微步/关节度；正式并行4°，旧逐轴10°。
  * 启动已压住时从当前位置退回；退足步数后仍须稳定释放，不能仅凭步数发布零位。
  * 旧回零实现继续使用上面的5°参数，便于教学对照和回滚。 */
 #ifndef HOMING_SEQUENCE_BACKOFF_M3_DEG
-#define HOMING_SEQUENCE_BACKOFF_M3_DEG 10.0f
+#if ROBOTARM_PARALLEL_HOMING && !ROBOTARM_STARTUP_TRIAL_MODE
+#define HOMING_SEQUENCE_BACKOFF_M3_DEG 4.0f /* 正式并行回零：M3 退回 160 微步。 */
+#else
+#define HOMING_SEQUENCE_BACKOFF_M3_DEG 10.0f /* 保留旧逐轴及台架试验配置。 */
+#endif
 #endif
 
 /*

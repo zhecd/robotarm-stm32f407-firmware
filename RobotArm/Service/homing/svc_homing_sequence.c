@@ -22,7 +22,7 @@ static uint32_t s_main_seen;
 static const HomeConfig s_config={
     .period_ms=HOMING_SEQUENCE_SEEK_PERIOD_MS,.seek_timeout_ms=0U,.total_timeout_ms=220000U,
     .backoff={(uint32_t)(HOMING_BACKOFF_M1_DEG*UNITS_PER_DEGREE),
-              (uint32_t)(HOMING_BACKOFF_M2_DEG*UNITS_PER_DEGREE),
+              (uint32_t)(HOMING_SEQUENCE_BACKOFF_M2_DEG*UNITS_PER_DEGREE),
               (uint32_t)(HOMING_SEQUENCE_BACKOFF_M3_DEG*UNITS_PER_DEGREE)},
     .seek_dir=(HOMING_SEEK_M1_DIR_HIGH<<0)|(HOMING_SEEK_M2_DIR_HIGH<<1)|(HOMING_SEEK_M3_DIR_HIGH<<2),
     /* 寻限位/退回默认均1000微步/秒；单轴截止关闭，整轮220秒截止保留。 */

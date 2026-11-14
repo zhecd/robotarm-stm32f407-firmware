@@ -3,7 +3,7 @@
 | 参数 | 当前默认 | 源码位置 |
 |---|---|---|
 | 寻位/退回 | 各1000微步/秒，220秒整轮故障截止 | `RobotArm/Service/homing/svc_homing_sequence.c` |
-| M1/M2/M3退回 | 4000/1240/400微步，约100°/31°/10° | 同上及`home_sequence` |
+| M1/M2/M3退回 | 4000/1160/160微步，约100°/29°/4° | 同上及`home_sequence` |
 | 夹爪 | 开100°、关72°、600ms保持后停PWM | `RobotArm/BSP/driver/include/bsp_driver_config.h` |
 | TMC细分/电流码 | 16细分，IRUN28、IHOLD15；码值不是安培 | 同上 |
 | 闭环到位死区 | 3°电机轴，约0.667°关节 | `RobotArm/Algorithm/include/common/robot_config.h` |
