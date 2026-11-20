@@ -29,7 +29,7 @@ flowchart TD
 
 `USART1 DMA → uart_line_reader → AppSerial → GCodeParser → CommandService → PlanningService → Ctrl_Planner → MotionService → Ctrl_MotionEngine → Dev_Joint → Drv_Stepper`。
 
-路径先校验，再按预算生成分段；坐标FIFO、规划状态与STEP队列分别管理。G0/G1受理不是运动完成，M400等待队列及闭环恢复结束。M112同时取消未来命令和当前执行，撤销参考。
+路径先校验，再按预算生成分段；坐标FIFO、规划状态与STEP队列分别管理。G0/G1受理不是运动完成，M400等待路径和步进队列完成，并依据三轴新鲜反馈、稳定窗口和到位死区确认闭环已收敛。M112同时取消未来命令和当前执行，撤销参考。
 
 ## 启动和恢复
 
@@ -45,7 +45,7 @@ stateDiagram-v2
   FAILED --> CHECKING: 显式M999
 ```
 
-M1/M2 D0、M3 D1寻位，各到达后停步等待；全部稳定触发才并行反向退4000/1160/160微步。寻退周期1ms，即1000微步/秒；每轮220秒总截止，无单轴30秒正常寻位截止。完成释放确认和反馈零偏标定后READY保持EN使能。
+M1/M2 D0、M3 D1寻位，各到达后停步等待；全部稳定触发才并行反向退4068/1160/160微步。寻退周期1ms，即1000微步/秒；每轮220秒总截止，无单轴30秒正常寻位截止。完成释放确认和反馈零偏标定后READY保持EN使能。
 
 ## 采样与并发
 

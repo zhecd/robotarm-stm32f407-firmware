@@ -26,6 +26,8 @@ void Ctrl_ClosedLoop_SyncTarget(void);
 /* 主循环每20ms推进一次；运动/稳定等待期间只采样，不新增补偿。 */
 void Ctrl_ClosedLoop_Update(void);
 bool Ctrl_ClosedLoop_IsRecoveryActive(void);
+/* 三轴均已用新鲜反馈确认进入到位死区，稳定等待和补偿均已结束。 */
+bool Ctrl_ClosedLoop_HasSettled(void);
 /* 复制已有记录，无硬件访问；只能由主循环调用，NULL无操作。 */
 void Ctrl_ClosedLoop_GetStatus(ClosedLoopStatus_t *out);
 

@@ -131,6 +131,9 @@ static void App_ModeSwitchTask(void)
     static uint32_t last_switch_ms = 0U;
     if (!s_mode_switch_requested) return;
     s_mode_switch_requested = false;
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+    if (AppSerial_JointTrialActive()) return;
+#endif
 
     uint32_t now = PlatformTime_NowMs();
     if ((now - last_switch_ms) < 200U) return;

@@ -1,46 +1,61 @@
 {
   "functional_baseline": 190,
-  "release": "190-home-20261114",
-  "date": "2026-11-14",
+  "release": "190-vision-20261120",
+  "date": "2026-11-20",
   "home_backoff_degrees": [
-    100,
+    101.7,
     29,
     4
   ],
   "home_backoff_microsteps": [
-    4000,
+    4068,
     1160,
     160
   ],
+  "tool_offset_mm": {
+    "r": 52,
+    "z": -40
+  },
+  "home_model_xyz_mm": [
+    0,
+    192,
+    245
+  ],
   "native_tests": {
-    "Debug": 558,
-    "Release": 558
+    "Debug": 559,
+    "Release": 559
   },
   "arm_profiles_built_and_audited": [
-    "ProductionLocked",
-    "ProductionTrial",
-    "ProductionHoldLocked",
-    "ProductionHoldTrial",
     "ProductionDebug",
     "ProductionRelease",
-    "ProductionLockedRelease"
+    "VisionStationRelease"
   ],
+  "arm_toolchain": "Arm GNU Toolchain 15.2.Rel1 (GCC 15.2.1)",
   "architecture_check_passed": true,
-  "production_rebuild_matches_deployed_elf_and_hex": true,
-  "production_ELF_sha256": "90ca5ca81e6bc70bdbe32bff548f4f8f53bc24655bc448cf5908fc6550bc4f0e",
   "firmware": {
-    "ProductionRelease.hex": "64eca6fe3d6176822c691f9221154200cd9579918a898250e19cb003b7013ecd",
-    "ProductionRelease.bin": "7b67460896ccd23ccecaae4f2fa0687d1a493f1dba1a19619041608fbc816570"
+    "ProductionRelease.hex": "0fcd02a30b75f05e019bd13724b51ceedbf3ca9914a6aaa80459cef1b28880ab",
+    "ProductionRelease.bin": "359319d583b26c402f2b9c6e12bcef85d6653871d20f4c387e39f8a012836354",
+    "VisionStationRelease.hex": "b4f32a490e9df449cc4ed6150d6cee1f19cfee31ee7098bb5e1c7b016c3f9715",
+    "VisionStationRelease.bin": "461faef07a14f41de57519c2795cea29e7441865cfe9e5c9eaf352b7cf45ca87"
   },
-  "hardware_checks": {
-    "operator_confirmed_home": true,
-    "independent_angle_measurement": false,
-    "UART_queries_passed": 9,
-    "SW7_idle_roundtrip_passed": true,
-    "PS2_frames_valid": 8863,
-    "PS2_frames_invalid": 0,
-    "led1_pattern_confirmed": true,
-    "ps2_motion_tested_this_check": false
+  "prior_hardware_evidence": {
+    "profile": "VisionStationRelease",
+    "rebuilt_hex_matches_deployed_hex": true,
+    "flash_readback_matching_hex_bytes": 95276,
+    "home_status": {
+      "state": "READY",
+      "homed": true,
+      "fault": 0
+    },
+    "formal_sorting_assignments": {
+      "red": "red",
+      "yellow": "yellow",
+      "blue": "blue"
+    },
+    "host_effective_r_mm": 50,
+    "host_commit": "01bcfd27030702800714016f935a7663981a98fd",
+    "independent_absolute_position_measurement": false
   },
+  "hardware_access_during_release_preparation": false,
   "license": "Apache-2.0"
 }

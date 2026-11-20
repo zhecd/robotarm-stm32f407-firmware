@@ -53,6 +53,7 @@ option(ROBOTARM_STARTUP_TRIAL_MODE "One-shot guarded real startup trial, default
 option(ROBOTARM_SEQUENTIAL_HOMING "Candidate: real sequential contact/backoff/rearm homing" OFF)
 option(ROBOTARM_LIMIT_STATE_MODE "Candidate: 1ms GPIO limit sampling, no limit EXTI" OFF)
 option(ROBOTARM_PARALLEL_HOMING "Three-axis contact barrier before parallel backoff" OFF)
+option(ROBOTARM_STARTUP_GRIPPER_IDLE "Bind the gripper at startup without commanding it" OFF)
 if(ROBOTARM_PARALLEL_HOMING AND NOT (ROBOTARM_SEQUENTIAL_HOMING AND ROBOTARM_LIMIT_STATE_MODE))
     message(FATAL_ERROR "Parallel homing requires the qualified GPIO homing controller")
 endif()
@@ -175,6 +176,7 @@ set(ROBOTARM_HAL_INCLUDE_DIRS
 
 function(robotarm_target target)
     target_compile_definitions(${target} PRIVATE ROBOTARM_PARALLEL_HOMING=$<BOOL:${ROBOTARM_PARALLEL_HOMING}>)
+    target_compile_definitions(${target} PRIVATE ROBOTARM_STARTUP_GRIPPER_IDLE=$<BOOL:${ROBOTARM_STARTUP_GRIPPER_IDLE}>)
     target_compile_definitions(${target} PRIVATE ROBOTARM_LIMIT_STATE_MODE=$<BOOL:${ROBOTARM_LIMIT_STATE_MODE}>)
     target_compile_definitions(${target} PRIVATE ROBOTARM_SEQUENTIAL_HOMING=$<BOOL:${ROBOTARM_SEQUENTIAL_HOMING}>)
     target_compile_definitions(${target} PRIVATE ROBOTARM_LIMIT_SEEK_TRIAL=$<BOOL:${ROBOTARM_LIMIT_SEEK_TRIAL}>)

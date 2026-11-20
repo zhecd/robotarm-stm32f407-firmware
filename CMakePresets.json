@@ -302,6 +302,15 @@
       }
     },
     {
+      "name": "VisionStationRelease",
+      "displayName": "VisionStationRelease",
+      "description": "Hardware-validated vision station profile with joint-return diagnostics",
+      "inherits": "ProductionRelease",
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": "-DROBOTARM_JOINT_RETURN_TEST=1"
+      }
+    },
+    {
       "name": "ProductionHoldLocked",
       "description": "显式单次回零后保持10秒；租约及截止保留，禁止新STEP，完成断能；三轴并行寻限位后并行退回",
       "inherits": "ProductionLocked",
@@ -452,6 +461,10 @@
     {
       "name": "ProductionRelease",
       "configurePreset": "ProductionRelease"
+    },
+    {
+      "name": "VisionStationRelease",
+      "configurePreset": "VisionStationRelease"
     },
     {
       "name": "ProductionHoldLocked",

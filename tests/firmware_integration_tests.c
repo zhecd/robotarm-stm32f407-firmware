@@ -70,17 +70,23 @@ int main(void)
     CompleteHoming();
     Send("M408"); assert(strstr(fake_tx,"STATE:READY HOMED:1 ALLOWED:1"));
 
-    /* 最小端到端移动：真实解析 -> 命令 -> 规划 -> STEP。闭环另有独立测试。 */
+    /* 模拟电机准时到位，端到端验证串口等待与闭环判定。 */
     Send("G1 X1 F1000");
     for(unsigned i=0;i<200000 && CommandService_IsMotionPending();i++) {
         App_RunOnce();
-        for(int axis=0;axis<3;axis++) MotionService_SetClosedLoopAxisEnabled(axis,false);
+        FakeRobot_AdvanceUs(2000);
         for(unsigned tick=0;tick<100;tick++) MotionService_OnStepTickFromISR();
     }
     assert(!CommandService_IsMotionPending());
     Send("M400");
     for(unsigned i=0;i<200000 && !strstr(fake_tx,"ok\r\n");i++) {
         for(unsigned tick=0;tick<100;tick++) MotionService_OnStepTickFromISR();
+        if (MotionService_IsIdle()) {
+            ClosedLoopStatus_t status;
+            MotionService_GetClosedLoopStatus(&status);
+            memcpy(fake_motor_deg, status.target_motor_deg, sizeof(fake_motor_deg));
+        }
+        FakeRobot_AdvanceUs(2000);
         App_RunOnce();
     }
     assert(strstr(fake_tx,"ok\r\n"));

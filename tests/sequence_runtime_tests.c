@@ -119,8 +119,7 @@ static void Lifecycle(void)
     Send("M408");LCHECK(strstr(fake_tx,"STATE:READY HOMED:1 ALLOWED:1"));
     Send("M409");LCHECK(strstr(fake_tx,"FRAME:JOINT"));
     if(!strcmp(mode,"lifecycle_move")){
-        /* 本场景隔离协议→规划→STEP链；闭环响应由独立测试覆盖。 */
-        for(unsigned a=0;a<3;a++)MotionService_SetClosedLoopAxisEnabled((int)a,false);
+        /* 到位后给闭环提供模拟编码器反馈，再验证 M400。 */
         uint32_t before=fake_steps[0]+fake_steps[1]+fake_steps[2];
         Send("G1 X1 Y185 Z240 F300");
         LCHECK(!strstr(fake_tx,"error:"));
@@ -133,7 +132,13 @@ static void Lifecycle(void)
         }
         LCHECK(t<300000 && !SafetyService_HasFault());
         LCHECK(fake_steps[0]+fake_steps[1]+fake_steps[2]>before);
-        Send("M400");LCHECK(strstr(fake_tx,"ok\r\n"));
+        ClosedLoopStatus_t status;
+        MotionService_GetClosedLoopStatus(&status);
+        memcpy(fake_motor_deg, status.target_motor_deg, sizeof(fake_motor_deg));
+        Send("M400");
+        LCHECK(!strstr(fake_tx,"ok\r\n"));
+        for (unsigned ms=0;ms<CL_SETTLE_MS+100U && !strstr(fake_tx,"ok\r\n");ms++) Tick(true);
+        LCHECK(strstr(fake_tx,"ok\r\n"));
         LCHECK(fake_joints_enabled);return;
     }
     if(!strcmp(mode,"lifecycle_gripper")){

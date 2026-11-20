@@ -18,6 +18,10 @@ typedef enum {
 void AppSerial_Init(AppSerialMode_t mode);
 void AppSerial_SetMode(AppSerialMode_t mode);
 void AppSerial_Service(void);
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+/** 锁住物理手柄的模式切换，直到关节测试回到原位或故障回零。 */
+bool AppSerial_JointTrialActive(void);
+#endif
 /** M999 只提出恢复请求；AppRuntime 负责启动和完成回零流程。 */
 bool AppSerial_TakeRecoveryRequest(void);
 /** 消费 M112 事件；已有故障时重复停止仍必须能取消本轮启动/恢复。 */

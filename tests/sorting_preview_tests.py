@@ -58,7 +58,7 @@ class SortingPreviewTests(unittest.TestCase):
 
     def test_valid_endpoints_with_invalid_path_rejected_before_steps(self):
         # 起点/终点都可达；直线中部进入工具偏移内侧不可达区域。
-        model = self.native('command\tG1 X120 Y20 Z100 F1000\ncommand\tM400\n', ('-120', '20', '100'))
+        model = self.native('command\tG1 X120 Y20 Z105 F1000\ncommand\tM400\n', ('-120', '20', '105'))
         self.assertFalse(model['pass'])
         self.assertEqual(model['reason'], 'PATH_REJECTED')
         self.assertEqual(model['fake_steps'], [0, 0, 0])

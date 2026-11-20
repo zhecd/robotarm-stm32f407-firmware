@@ -55,6 +55,7 @@ static PID_State_t   s_pid[CL_AXIS_COUNT];
 static uint32_t      s_last_correct_ms[CL_AXIS_COUNT];
 static bool          s_was_busy;
 static uint32_t      s_settle_until_ms;
+static bool          s_settle_pending;
 static RecoveryTrajectory_t s_recovery;
 /* 诊断只记录已经发生的判定/受理，不参与控制决策；Init开始新统计会话。 */
 static ClosedLoopStatus_t s_status;
@@ -340,6 +341,7 @@ void Ctrl_ClosedLoop_Init(void)
     }
     s_was_busy = false;
     s_settle_until_ms = 0U;
+    s_settle_pending = false;
     s_recovery = (RecoveryTrajectory_t){0};
 }
 
@@ -363,6 +365,7 @@ void Ctrl_ClosedLoop_SyncTarget(void)
     }
     s_was_busy = false;
     s_settle_until_ms = now + CL_SETTLE_MS;
+    s_settle_pending = true;
     s_recovery = (RecoveryTrajectory_t){0};
 }
 
@@ -410,12 +413,14 @@ void Ctrl_ClosedLoop_Update(void)
     if (s_was_busy) {
         s_was_busy = false;
         s_settle_until_ms = now + CL_SETTLE_MS;
+        s_settle_pending = true;
+        s_status.decision_mask = 0U;
         for (int i = 0; i < CL_AXIS_COUNT; i++) {
             s_axis[i].filt_valid = false;
             PID_Reset(&s_pid[i]);
         }
     }
-    if ((int32_t)(now - s_settle_until_ms) < 0) {
+    if (s_settle_pending && (int32_t)(now - s_settle_until_ms) < 0) {
         /* 250ms稳定等待仅禁止生成补偿，采样仍按主循环闭环周期执行。
            若此处直接返回，M400后的反馈会超过100ms有效期，上位机便会
            正确拒绝下一段运动。继续发布实测值，不改目标、不推进PID，
@@ -428,6 +433,7 @@ void Ctrl_ClosedLoop_Update(void)
         return;
     }
 
+    s_settle_pending = false;
     int32_t  s[CL_AXIS_COUNT];
     bool     any = false;
 
@@ -464,6 +470,30 @@ bool Ctrl_ClosedLoop_IsRecoveryActive(void)
 {
     /* 停止可能发生在下一轮Update之前，查询也必须立即反映动作已撤销。 */
     return s_recovery.active && !Ctrl_MotionEngine_HasFault();
+}
+
+bool Ctrl_ClosedLoop_HasSettled(void)
+{
+    const uint8_t required = (uint8_t)((1U << CL_AXIS_COUNT) - 1U);
+    if (!s_status.target_initialized || s_was_busy || s_settle_pending ||
+        s_recovery.active || Ctrl_MotionEngine_HasFault() ||
+        (s_status.decision_mask & required) != required) return false;
+
+    StateServiceStatus_t feedback;
+    StateService_GetStatus(&feedback);
+    const uint32_t now = PlatformTime_NowMs();
+    if ((StateService_FreshMask(&feedback, now, FEEDBACK_QUERY_MAX_AGE_MS) &
+         required) != required) return false;
+
+    for (int i = 0; i < CL_AXIS_COUNT; ++i) {
+        const AxisCL_t *axis = &s_axis[i];
+        if (!axis->enabled || !axis->filt_valid || axis->recovering || axis->correction_pending ||
+            (uint32_t)(now - s_status.decision_ms[i]) >= FEEDBACK_QUERY_MAX_AGE_MS ||
+            !(fabsf(s_status.error_motor_deg[i]) <= axis->deadband_deg) ||
+            !(fabsf(axis->target_deg - axis->motor_angle_deg) <= axis->deadband_deg))
+            return false;
+    }
+    return true;
 }
 
 void Ctrl_ClosedLoop_GetStatus(ClosedLoopStatus_t *out)

@@ -133,7 +133,7 @@ extern "C" {
 #endif
 
 #ifndef TOOL_OFFSET_R
-#define TOOL_OFFSET_R           45.0f /* 夹爪水平方向偏移，mm。 */
+#define TOOL_OFFSET_R           52.0f /* 夹爪径向向外偏移，mm。 */
 #endif
 
 #ifndef TOOL_OFFSET_Z
@@ -141,7 +141,7 @@ extern "C" {
 #endif
 
 #ifndef BASE_HEIGHT
-#define BASE_HEIGHT             140.0f /* 桌面到肩关节的高度，mm。 */
+#define BASE_HEIGHT             145.0f /* 桌面到肩关节的高度，mm。 */
 #endif
 
 #ifndef UNITS_PER_DEGREE
@@ -173,13 +173,13 @@ extern "C" {
 #define ROT_MAX_DEG               97.0f /* 关节角允许范围边界，deg。 */
 #endif
 #ifndef LOW_MIN_DEG
-#define LOW_MIN_DEG              -28.0f /* 关节角允许范围边界，deg。 */
+#define LOW_MIN_DEG              -25.0f /* 关节角允许范围边界，deg。 */
 #endif
 #ifndef LOW_MAX_DEG
-#define LOW_MAX_DEG               87.0f /* 关节角允许范围边界，deg。 */
+#define LOW_MAX_DEG               93.0f /* 关节角允许范围边界，deg。 */
 #endif
 #ifndef HIGH_MIN_DEG
-#define HIGH_MIN_DEG             -77.0f /* 关节角允许范围边界，deg。 */
+#define HIGH_MIN_DEG             -100.0f /* 关节角允许范围边界，deg。 */
 #endif
 #ifndef HIGH_MAX_DEG
 #define HIGH_MAX_DEG               2.0f /* 关节角允许范围边界，deg。 */
@@ -191,10 +191,10 @@ extern "C" {
 #define HOMEPOSE_X_MM              0.0f /* 回零后参考姿态，XYZ 为 mm、其余为关节 deg。 */
 #endif
 #ifndef HOMEPOSE_Y_MM
-#define HOMEPOSE_Y_MM            185.0f /* 回零后参考姿态，XYZ 为 mm、其余为关节 deg。 */
+#define HOMEPOSE_Y_MM            (LINK_2_LEN + TOOL_OFFSET_R) /* 三关节为 0° 时的工具点径向坐标，mm。 */
 #endif
 #ifndef HOMEPOSE_Z_MM
-#define HOMEPOSE_Z_MM            240.0f /* 回零后参考姿态，XYZ 为 mm、其余为关节 deg。 */
+#define HOMEPOSE_Z_MM            (BASE_HEIGHT + LINK_1_LEN + TOOL_OFFSET_Z) /* 三关节为 0° 时的工具点高度，mm。 */
 #endif
 #ifndef HOMEPOSE_ROT_DEG
 #define HOMEPOSE_ROT_DEG           0.0f /* 回零后参考姿态，XYZ 为 mm、其余为关节 deg。 */
@@ -368,7 +368,11 @@ extern "C" {
 #endif
 
 #ifndef HOMING_BACKOFF_M1_DEG
+#if ROBOTARM_PARALLEL_HOMING && !ROBOTARM_STARTUP_TRIAL_MODE
+#define HOMING_BACKOFF_M1_DEG   101.7f /* M1 回零退回关节角，deg。 */
+#else
 #define HOMING_BACKOFF_M1_DEG   100.0f /* M1 回零退回关节角，deg。 */
+#endif
 #endif
 
 #ifndef HOMING_BACKOFF_M2_DEG

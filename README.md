@@ -4,7 +4,7 @@
 
 用于空载教学机械臂的 STM32F407 固件：三轴运动、回零、限位保护、编码器反馈、有界闭环恢复、PS2 遥操作和 MG90S 夹爪。上位机通过 **115200 / 8N1** 的 ASCII G-code 协议控制末端位置。
 
-本项目基于 **190 功能基线**，正式回零配置为 **2026-11-14 校准版**，使用独立仓库与独立版本历史。包含生产源码、必要第三方驱动、模块测试、中文文档和正式固件，不包含历史工程的大量备份和构建缓存。
+本项目基于 **190 功能基线**，当前为 **2026-11-20 视觉分拣配套版**，使用独立仓库与独立版本历史。包含生产源码、必要第三方驱动、模块测试、中文文档和正式固件，不包含历史工程的大量备份和构建缓存。
 
 GitHub仓库：[`zhecd/robotarm-stm32f407-firmware`](https://github.com/zhecd/robotarm-stm32f407-firmware)，初始可见性为私有，许可证为Apache-2.0。
 
@@ -13,13 +13,14 @@ GitHub仓库：[`zhecd/robotarm-stm32f407-firmware`](https://github.com/zhecd/ro
 | 功能 | 当前实现 |
 |---|---|
 | 启动与恢复 | 驱动配置读回确认；三轴并行寻限位，全部确认后并行退回；显式 M999 恢复 |
-| 回零参数 | M1/M2 D0、M3 D1；寻退 1000 微步/秒；退回 100°/29°/4°；整轮 220 秒截止 |
+| 回零参数 | M1/M2 D0、M3 D1；寻退 1000 微步/秒；退回 101.7°/29°/4°；整轮 220 秒截止 |
 | 限位 | 普通 GPIO、1ms 周期采样、10ms 稳定确认；限位 EXTI 关闭，SW7 仍用 EXTI |
 | 控制与反馈 | 直线分段规划、逆解、STEP 队列、三路 AS5600；≤10°关节误差有界恢复 |
 | 人机交互 | G-code / PS2 模式切换；LED1 串口常亮、PS2 慢闪，LED2/3/4 对应三路限位 |
 | 夹爪 | MG90S：100°打开、72°关闭，600ms 保持后停 PWM |
 | TMC2209 | 串口配置确认及 StealthChop 配置；保留限流、细分及故障保护 |
-| 视觉扩展 | 保留坐标运动、反馈、夹爪与恢复协议；未新增 OpenCV 或相机标定实现 |
+| 工具与准备姿态 | 固件工具偏置 R=52 mm、Z=−40 mm，肩关节高度 145 mm。回零后模型坐标为 X0、Y192、Z245 mm |
+| 视觉分拣 | `M400` 等待三轴闭环到位后才返回 `ok`。相机预览、标定、回拍校验和三色分拣由 [配套上位机](https://github.com/zhecd/robotarm-color-sorting-host) 执行 |
 
 ## 快速开始
 
@@ -36,7 +37,7 @@ cmake --preset ProductionRelease
 cmake --build --preset ProductionRelease --parallel
 ```
 
-输出：`build/ProductionRelease/robotarm_stm32f407.elf`。仓库 `firmware/` 提供已校验的正式 HEX/BIN；说明和哈希见 [固件入口](firmware/README.md)。[构建与测试](docs/build-and-test.md)包含 Release 测试、阶段测试、HEX 导出与编译锁定版本。
+通用固件输出为 `build/ProductionRelease/robotarm_stm32f407.elf`。复现已跑通的视觉工位时，选择 [VisionStationRelease.hex](firmware/VisionStationRelease.hex)。两个版本的用途、烧录地址和校验值见 [固件说明](firmware/README.md)，本地构建步骤见 [构建与测试](docs/build-and-test.md)。
 
 ## 目录与阅读顺序
 
@@ -49,7 +50,7 @@ tests/               真实生产模块的电脑测试及设备/时钟替身
 tools/               离线协议参考、教学诊断和受控试验工具
 scripts/             架构检查、ELF 审计和离线发布校验
 docs/                当前架构、硬件、协议、教学与验证边界
-firmware/            190 正常固件和校验清单
+firmware/            通用版、视觉工位版及校验清单
 .github/workflows/   仅构建/测试的 CI，不烧录、不发布
 ```
 

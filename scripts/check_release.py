@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib,json,re,sys
 ROOT=Path(__file__).resolve().parents[1]
 EXCLUDED={'.git','build','out','dist','.venv','venv','__pycache__','.pytest_cache'}
-REQUIRED=['README.md','LICENSE','NOTICE','THIRD_PARTY_NOTICES.md','CONTRIBUTING.md','CHANGELOG.md','AGENTS.md','CMakeLists.txt','CMakePresets.json','.gitignore','.gitattributes','.github/workflows/ci.yml','Core/Src/main.c','RobotArm/App/app_runtime.c','docs/architecture.md','docs/serial-protocol.md','docs/build-and-test.md','docs/hardware.md','docs/control.md','docs/validation.md','docs/validation-summary.json','firmware/ProductionRelease.hex','firmware/ProductionRelease.bin','firmware/SHA256SUMS','Drivers/CMSIS/LICENSE.txt','Drivers/STM32F4xx_HAL_Driver/LICENSE.txt','Drivers/CMSIS/Device/ST/STM32F4xx/LICENSE.txt']
+REQUIRED=['README.md','LICENSE','NOTICE','THIRD_PARTY_NOTICES.md','CONTRIBUTING.md','CHANGELOG.md','AGENTS.md','CMakeLists.txt','CMakePresets.json','.gitignore','.gitattributes','.github/workflows/ci.yml','Core/Src/main.c','RobotArm/App/app_runtime.c','docs/architecture.md','docs/serial-protocol.md','docs/build-and-test.md','docs/hardware.md','docs/control.md','docs/validation.md','docs/validation-summary.json','firmware/ProductionRelease.hex','firmware/ProductionRelease.bin','firmware/VisionStationRelease.hex','firmware/VisionStationRelease.bin','firmware/SHA256SUMS','Drivers/CMSIS/LICENSE.txt','Drivers/STM32F4xx_HAL_Driver/LICENSE.txt','Drivers/CMSIS/Device/ST/STM32F4xx/LICENSE.txt']
 def main():
  errors=[]
  for n in REQUIRED:

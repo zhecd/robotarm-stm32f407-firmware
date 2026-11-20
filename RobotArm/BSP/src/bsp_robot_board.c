@@ -48,7 +48,12 @@ void BSP_RobotBoard_InitGripper(void)
 
 bool BSP_RobotBoard_TryInitGripper(void)
 {
+#if ROBOTARM_STARTUP_GRIPPER_IDLE
+    /* 视觉标定期间只绑定通道，启动和 M999 均不主动输出夹爪 PWM。 */
+    return Drv_Servo_Bind(Drv_Servo_GetHandle(), &htim2, TIM_CHANNEL_2);
+#else
     return Drv_Servo_TryInit(Drv_Servo_GetHandle(), &htim2, TIM_CHANNEL_2);
+#endif
 }
 
 bool BSP_RobotBoard_PrepareMotionDrivers(uint8_t *failed_node)

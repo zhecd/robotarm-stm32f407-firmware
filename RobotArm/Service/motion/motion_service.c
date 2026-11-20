@@ -175,6 +175,11 @@ bool MotionService_IsClosedLoopRecoveryActive(void)
     return Ctrl_ClosedLoop_IsRecoveryActive();
 }
 
+bool MotionService_HasClosedLoopSettled(void)
+{
+    return Ctrl_ClosedLoop_HasSettled();
+}
+
 void MotionService_GetClosedLoopStatus(ClosedLoopStatus_t *out)
 {
     Ctrl_ClosedLoop_GetStatus(out);

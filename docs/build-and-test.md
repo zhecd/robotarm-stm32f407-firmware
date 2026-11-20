@@ -1,6 +1,6 @@
 # 构建与测试
 
-所有命令从仓库根目录执行。Python ≥3.10；CMake ≥3.22；Ninja；原生 GNU GCC；固件另需 `arm-none-eabi-gcc`、`arm-none-eabi-objcopy`、`arm-none-eabi-nm`、`arm-none-eabi-objdump`。Windows 可用 MinGW-w64，不使用 MSVC 构建这些 GNU 链接测试。PowerShell 7 或 Windows PowerShell 用于部分脚本 SelfTest；未安装时对应可选测试不会注册，测试数可能少于 Windows 本机的558。
+所有命令从仓库根目录执行。Python ≥3.10；CMake ≥3.22；Ninja；原生 GNU GCC；固件另需 `arm-none-eabi-gcc`、`arm-none-eabi-objcopy`、`arm-none-eabi-nm`、`arm-none-eabi-objdump`。Windows 可用 MinGW-w64，不使用 MSVC 构建这些 GNU 链接测试。PowerShell 7 或 Windows PowerShell 用于部分脚本 SelfTest；未安装时对应可选测试不会注册，测试数可能少于 Windows 本机的 559 项。
 
 ## 电脑验证（不接硬件）
 
@@ -26,10 +26,19 @@ cmake --build --preset ProductionRelease --parallel
 cmake --preset ProductionDebug
 cmake --build --preset ProductionDebug --parallel
 arm-none-eabi-objcopy -O ihex build/ProductionRelease/robotarm_stm32f407.elf build/ProductionRelease/robotarm_stm32f407.hex
-arm-none-eabi-objcopy -O binary build/ProductionRelease/robotarm_stm32f407.elf build/ProductionRelease/robotarm_stm32f407.bin
+arm-none-eabi-objcopy -O binary --gap-fill 0xff build/ProductionRelease/robotarm_stm32f407.elf build/ProductionRelease/robotarm_stm32f407.bin
 ```
 
-`ProductionRelease`和`ProductionDebug`均是正常完整入口，上电自动夹爪关闭及并行回零。仅构建不会烧录，也不会执行动作。
+`ProductionRelease`、`ProductionDebug` 和 `VisionStationRelease` 上电执行自动夹爪关闭及并行回零。构建只生成产物。
+
+```sh
+cmake --preset VisionStationRelease
+cmake --build --preset VisionStationRelease --parallel
+arm-none-eabi-objcopy -O ihex build/VisionStationRelease/robotarm_stm32f407.elf build/VisionStationRelease/VisionStationRelease.hex
+arm-none-eabi-objcopy -O binary --gap-fill 0xff build/VisionStationRelease/robotarm_stm32f407.elf build/VisionStationRelease/VisionStationRelease.bin
+```
+
+发布版使用 Arm GNU Toolchain 15.2.Rel1（GCC 15.2.1）构建。视觉工位版启用此前用于查验关节往返的诊断入口，正常分拣仍使用通用协议。使用 [SHA-256 清单](../firmware/SHA256SUMS) 核对发布文件。
 
 ```sh
 # 编译层禁止动作的诊断入口；仍不会自动烧录

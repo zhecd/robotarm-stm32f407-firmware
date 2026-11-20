@@ -76,7 +76,7 @@ int main(int argc,char **argv)
             (unsigned long)s.flow.back[0],(unsigned long)s.flow.back[1],(unsigned long)s.flow.back[2]);
         assert(SafetyService_IsMotionAllowed() && s.committed && s.flow.completed==7 && saw_back);
         if(strcmp(name,"pressed"))assert(saw_overlap);
-        assert(s.flow.back[0]==4000 && s.flow.back[1]==1160 && s.flow.back[2]==160);
+        assert(s.flow.back[0]==4068 && s.flow.back[1]==1160 && s.flow.back[2]==160);
         for(unsigned a=0;a<3;a++)assert(fake_wave_rises[a]==s.flow.seek[a]+s.flow.back[a]);
         if(!strcmp(name,"rate1000"))for(unsigned a=0;a<3;a++) {
             assert(s.flow.config.period_ms==1U && s.flow.config.backoff_period_ms==1U);

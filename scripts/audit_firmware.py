@@ -39,7 +39,7 @@ def audit(name,compiled=None,hold_ms=0,home_period_ms=2):
     # 直接从最终ELF读取Service配置，避免协议只改文字、真实周期仍为20ms。
     commands=json.loads((BUILD/'compile_commands.json').read_text())
     parallel=any('-DROBOTARM_PARALLEL_HOMING=1' in x['command'] for x in commands)
-    backoff_steps=(4000,1160,160) if parallel and compiled is None else (4000,1240,400)
+    backoff_steps=(4068,1160,160) if parallel and compiled is None else (4000,1240,400)
     config_address=symbols.get('s_config')
     if config_address is not None:
         config=None

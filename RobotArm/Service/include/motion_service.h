@@ -48,6 +48,7 @@ void MotionService_UpdateClosedLoop(void);
 /** 主循环只复制闭环记录；不读I2C、不生成帧、不清故障；NULL无操作。 */
 void MotionService_GetClosedLoopStatus(ClosedLoopStatus_t *out);
 bool MotionService_IsClosedLoopRecoveryActive(void);
+bool MotionService_HasClosedLoopSettled(void);
 bool MotionService_IsClosedLoopAxisEnabled(int axis);
 void MotionService_SetClosedLoopAxisEnabled(int axis, bool enabled);
 bool MotionService_GetClosedLoopAxisAngle(int axis, float *out_deg);

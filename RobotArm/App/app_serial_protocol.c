@@ -1,7 +1,7 @@
 /**
  * @file app_serial_protocol.c
  * @brief 串口协议会话：命令解析、接收确认、完成等待、查询和停止。
- * @details ok/queued 表示接收；M400 表示软件运动队列完成，不证明夹爪或末端物理到位。
+ * @details G-code 的 ok/queued 表示接收。M400 等待运动队列清空和电机侧闭环到位。
  */
 #include "app/app_serial_protocol.h"
 #include "app/app_gcode_parser.h"
@@ -25,6 +25,9 @@
 #include "service/svc_homing_sequence.h"
 #endif
 #include <stdarg.h>
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+#include <math.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 
@@ -33,6 +36,21 @@ static bool s_wait_move;
 static bool s_wait_plan;
 static bool s_recovery_request;
 static bool s_stop_request;
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+/* 只供本次 A/B：来自 Z170 的 M411 整数微步目标，方向遵循生产 DDA。 */
+enum { JOINT_TRIAL_M2 = -341, JOINT_TRIAL_M3 = 1265,
+       JOINT_TRIAL_FRAMES = 50, JOINT_TRIAL_FRAME_MS = 62 };
+_Static_assert(JOINT_TRIAL_FRAMES < RING_BUFFER_SIZE, "Joint test must fit the idle queue");
+_Static_assert((int) STEPS_PER_REV == 3200, "Fixed joint test requires 3200 motor steps per rev");
+typedef enum { JOINT_TRIAL_ARMED, JOINT_TRIAL_LOW, JOINT_TRIAL_RETURNING, JOINT_TRIAL_DONE } JointTrialPhase_t;
+static JointTrialPhase_t s_joint_trial;
+
+bool AppSerial_JointTrialActive(void)
+{
+    return s_joint_trial == JOINT_TRIAL_LOW || s_joint_trial == JOINT_TRIAL_RETURNING;
+}
+#endif
+
 
 /* 一次提交完整回复，避免逐字符 printf 在队列满时留下半条协议行。 */
 static void Reply(const char *format, ...)
@@ -49,11 +67,17 @@ static void Reply(const char *format, ...)
 
 void AppSerial_SetMode(AppSerialMode_t mode)
 {
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+    if (mode != APP_SERIAL_READY && AppSerial_JointTrialActive()) s_joint_trial = JOINT_TRIAL_DONE;
+#endif
     s_mode = mode;
     s_wait_move = s_wait_plan = false;
 }
 void AppSerial_Init(AppSerialMode_t mode)
 {
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+    s_joint_trial = JOINT_TRIAL_ARMED;
+#endif
     AppSerial_SetMode(mode);
     s_recovery_request = false;
     s_stop_request = false;
@@ -73,7 +97,7 @@ bool AppSerial_TakeRecoveryRequest(void)
 static bool MotionCompleted(void)
 {
     return MotionService_IsIdle() && !App_GCodeExec_IsMotionPending() &&
-           !MotionService_IsClosedLoopRecoveryActive();
+           MotionService_HasClosedLoopSettled();
 }
 static void PollPendingReply(void)
 {
@@ -217,8 +241,88 @@ static void ReportTeleopDiagnostics(void)
         d.first_invalid_status,(unsigned long)d.first_invalid_ms,last,first);
 }
 
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+static bool HandleJointTrial(const char *line)
+{
+    static const char *const phases[] = {"ARMED", "LOW", "RETURNING", "DONE"};
+    if (strcmp(line, "M413") == 0) {
+        Reply("M413 PHASE:%s GOAL_STEPS:0,%d,%d DURATION_MS:%u\r\n",
+              phases[s_joint_trial], JOINT_TRIAL_M2, JOINT_TRIAL_M3,
+              (unsigned)(JOINT_TRIAL_FRAMES * JOINT_TRIAL_FRAME_MS));
+        return true;
+    }
+    const bool down = strcmp(line, "M413 DOWN") == 0;
+    const bool up = strcmp(line, "M413 UP") == 0;
+    if (!down && !up) return false;
+
+    if (s_mode != APP_SERIAL_READY || App_Teleop_GetMode() != SYS_MODE_GCODE ||
+        s_wait_move || s_wait_plan || !MotionService_IsActionAllowed() || !MotionCompleted() ||
+        (down ? s_joint_trial != JOINT_TRIAL_ARMED : s_joint_trial != JOINT_TRIAL_LOW)) {
+        Reply("error: joint test requires the expected settled pose and permission\r\n");
+        return true;
+    }
+    for (unsigned axis = 0U; axis < MOTION_AXIS_COUNT; ++axis) {
+        if (AppHardware_IsLimitTriggered(axis)) {
+            Reply("error: joint test limit already triggered\r\n");
+            return true;
+        }
+    }
+    int32_t m1, m2, m3;
+    MotionService_GetTheorySteps(&m1, &m2, &m3);
+    if (m1 != 0 || m2 != (down ? 0 : JOINT_TRIAL_M2) || m3 != (down ? 0 : JOINT_TRIAL_M3)) {
+        Reply("error: wrong joint test starting steps\r\n");
+        return true;
+    }
+    if (down) {
+        float x, y, z;
+        App_GCodeExec_GetPlannedPosition(&x, &y, &z);
+        if (fabsf(x - HOMEPOSE_X_MM) > 0.05f || fabsf(y - HOMEPOSE_Y_MM) > 0.05f ||
+            fabsf(z - HOMEPOSE_Z_MM) > 0.05f) {
+            Reply("error: joint test requires the home photo pose\r\n");
+            return true;
+        }
+    }
+    GripperStatus_t gripper;
+    Svc_Gripper_GetStatus(&gripper);
+    if (gripper.pwm_requested) {
+        Reply("error: joint test requires an idle gripper\r\n");
+        return true;
+    }
+
+    const int32_t goal2 = down ? JOINT_TRIAL_M2 : 0;
+    const int32_t goal3 = down ? JOINT_TRIAL_M3 : 0;
+    int32_t previous2 = m2;
+    int32_t previous3 = m3;
+    for (unsigned frame = 1U; frame <= JOINT_TRIAL_FRAMES; ++frame) {
+        const float u = (float)frame / JOINT_TRIAL_FRAMES;
+        const float progress = u*u*u * (10.0f + u * (6.0f*u - 15.0f));
+        const int32_t next2 = m2 + (int32_t)lroundf((float)(goal2 - m2) * progress);
+        const int32_t next3 = m3 + (int32_t)lroundf((float)(goal3 - m3) * progress);
+        const MotionFrame_t segment = {
+            .delta_m1 = 0, .delta_m2 = next2 - previous2, .delta_m3 = next3 - previous3,
+            .total_ticks = JOINT_TRIAL_FRAME_MS * TICKS_PER_MS,
+        };
+        if (!MotionService_SubmitFrame(&segment)) {
+            MotionService_AbortForFault(MOTION_FAULT_QUEUE_TIMEOUT);
+            Reply("error: failed to submit joint test frames\r\n");
+            return true;
+        }
+        previous2 = next2;
+        previous3 = next3;
+    }
+    MotionService_AdjustTheorySteps(0, goal2 - m2, goal3 - m3);
+    MotionService_SyncClosedLoopTarget();
+    s_joint_trial = down ? JOINT_TRIAL_LOW : JOINT_TRIAL_RETURNING;
+    Reply("ok\r\n");
+    return true;
+}
+#endif
+
 void AppSerial_Service(void)
 {
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+    if (s_joint_trial == JOINT_TRIAL_RETURNING && MotionCompleted()) s_joint_trial = JOINT_TRIAL_DONE;
+#endif
     PollPendingReply();
     char line[256];
     bool available = AppHardware_ReadLine(line,sizeof(line));
@@ -264,6 +368,13 @@ void AppSerial_Service(void)
             (unsigned long)s.flow.back[0],(unsigned long)s.flow.back[1],(unsigned long)s.flow.back[2],
             s.flow.holding,(unsigned long)s.flow.hold_count,s.committed,s.boot_ready,
             s.flow.parallel,s.flow.step_mask,s.flow.dir_mask);return;
+    }
+#endif
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+    if (HandleJointTrial(line)) return;
+    if (AppSerial_JointTrialActive() && strcmp(line, "M114") == 0) {
+        Reply("error: Cartesian plan unavailable during joint test\r\n");
+        return;
     }
 #endif
     GCodeFrame_t frame;
@@ -373,6 +484,12 @@ void AppSerial_Service(void)
         else s_wait_move=true;
         return;
     }
+#if defined(ROBOTARM_JOINT_RETURN_TEST) && ROBOTARM_JOINT_RETURN_TEST
+    if (AppSerial_JointTrialActive()) {
+        Reply("error: joint test must return before normal commands\r\n");
+        return;
+    }
+#endif
     ErrorCode_t result=App_GCodeExec_Run(&frame);
     if (result==ERR_PENDING) s_wait_plan=true;
     else if (result==ERR_QUEUED) Reply("queued\r\n");
